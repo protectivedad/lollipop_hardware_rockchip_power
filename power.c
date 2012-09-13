@@ -72,7 +72,7 @@ static void rk_power_set_interactive(struct power_module *module, int on)
 
     sysfs_write("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq", on ? "1608000" : "816000");
     sysfs_write(INTERACTIVE_PATH "input_boost", on ? "1" : "0");
-    sysfs_write("/sys/devices/system/cpu/cpu1/online", on ? "1" : "0");
+    //sysfs_write("/sys/devices/system/cpu/cpu1/online", on ? "1" : "0");
 }
 
 static void rk_power_hint(struct power_module *module, power_hint_t hint, void *data)
