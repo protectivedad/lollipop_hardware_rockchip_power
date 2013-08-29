@@ -52,30 +52,8 @@ static void sysfs_write(char *path, char *s)
 
 static void rk_power_init(struct power_module *module)
 {
-    ALOGD("version 2.0\n");
+    ALOGD("version 3.0\n");
 
-#if 0
-    /*
-     * cpufreq interactive governor: timer 20ms, min sample 20ms,
-     * hispeed 816MHz at load 85%.
-     */
-    sysfs_write(INTERACTIVE_PATH "timer_rate", "20000");
-    sysfs_write(INTERACTIVE_PATH "min_sample_time", "20000");
-    sysfs_write(INTERACTIVE_PATH "hispeed_freq", "816000");
-    sysfs_write(INTERACTIVE_PATH "go_hispeed_load", "85");
-    sysfs_write(INTERACTIVE_PATH "above_hispeed_delay", "100000");
-#else
-    /*
-     * cpufreq interactive governor: timer 20ms, min sample 40ms,
-     * hispeed 816MHz at load 90%, 140ms load burst needed to move above hispeed.
-     */
-    sysfs_write(INTERACTIVE_PATH "timer_rate", "20000");
-    sysfs_write(INTERACTIVE_PATH "min_sample_time", "40000");
-    sysfs_write(INTERACTIVE_PATH "hispeed_freq", "816000");
-    sysfs_write(INTERACTIVE_PATH "go_hispeed_load", "90");
-    sysfs_write(INTERACTIVE_PATH "above_hispeed_delay", "140000");
-    sysfs_write(INTERACTIVE_PATH "boostpulse_duration", "500000");
-#endif
     boostpulse_fd = open(BOOSTPULSE_PATH, O_WRONLY);
     if (boostpulse_fd < 0) {
         char buf[80];
