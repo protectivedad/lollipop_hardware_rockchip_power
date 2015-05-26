@@ -27,24 +27,29 @@
 
 #define INTERACTIVE_PATH "/sys/devices/system/cpu/cpufreq/interactive/"
 #define BOOSTPULSE_PATH  INTERACTIVE_PATH "boostpulse"
+
+//TODO stay the same with PowerManager.java
+#define PERFORMANCE_MODE_NORMAL         0
+#define PERFORMANCE_MODE_PERFORMANCE    1
+
 static int boostpulse_fd = -1;
 
 static void sysfs_write(char *path, char *s)
 {
-    //char buf[80];
+    char buf[80];
     int len;
     int fd = open(path, O_WRONLY);
 
     if (fd < 0) {
-        //strerror_r(errno, buf, sizeof(buf));
-        //ALOGE("Error opening %s: %s\n", path, buf);
+        strerror_r(errno, buf, sizeof(buf));
+        ALOGE("Error opening %s: %s\n", path, buf);
         return;
     }
 
     len = write(fd, s, strlen(s));
     if (len < 0) {
-        //strerror_r(errno, buf, sizeof(buf));
-        //ALOGE("Error writing to %s: %s\n", path, buf);
+        strerror_r(errno, buf, sizeof(buf));
+        ALOGE("Error writing to %s: %s\n", path, buf);
     }
 
     close(fd);
@@ -83,6 +88,7 @@ static void rk_power_set_interactive(struct power_module *module, int on)
 
 static void rk_power_hint(struct power_module *module, power_hint_t hint, void *data)
 {
+    int mode = 0;
     switch (hint) {
     case POWER_HINT_INTERACTION:
         if (boostpulse_fd >= 0) {
@@ -93,6 +99,20 @@ static void rk_power_hint(struct power_module *module, power_hint_t hint, void *
     case POWER_HINT_VSYNC:
         break;
 
+    case POWER_HINT_PERFORMANCE_MODE:
+        mode = *(int*)data;
+        //ALOGD("POWER_HINT_PERFORMANCE_MODE: %d\n", mode);
+        if (PERFORMANCE_MODE_PERFORMANCE == mode) {
+            sysfs_write("/sys/module/rockchip_pm/parameters/policy", "0");
+            sysfs_write("/dev/video_state", "p");
+        } else if(PERFORMANCE_MODE_PERFORMANCE == mode) {
+            sysfs_write("/sys/module/rockchip_pm/parameters/policy", "1");
+            sysfs_write("/dev/video_state", "n");
+        } else {
+            sysfs_write("/sys/module/rockchip_pm/parameters/policy", "1");
+            sysfs_write("/dev/video_state", "n");
+        }
+        break;
     default:
         break;
     }
