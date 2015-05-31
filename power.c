@@ -21,6 +21,7 @@
 
 #define LOG_TAG "RKPowerHAL"
 #include <utils/Log.h>
+#include <cutils/properties.h>
 
 #include <hardware/hardware.h>
 #include <hardware/power.h>
@@ -33,6 +34,9 @@
 #define PERFORMANCE_MODE_PERFORMANCE    1
 
 static int boostpulse_fd = -1;
+
+char property[PROPERTY_VALUE_MAX];
+static int support_turn_pm_policy = 0;
 
 static void sysfs_write(char *path, char *s)
 {
@@ -64,6 +68,11 @@ static void rk_power_init(struct power_module *module)
         char buf[80];
         strerror_r(errno, buf, sizeof(buf));
         ALOGE("Error opening %s: %s\n", BOOSTPULSE_PATH, buf);
+    }
+
+    property_get("ro.board.platform", property, "unknown");
+    if (!strcmp(property, "rk312x") || !strcmp(property, "rk3288")) {
+        support_turn_pm_policy = 1;
     }
 }
 
@@ -103,13 +112,20 @@ static void rk_power_hint(struct power_module *module, power_hint_t hint, void *
         mode = *(int*)data;
         //ALOGD("POWER_HINT_PERFORMANCE_MODE: %d\n", mode);
         if (PERFORMANCE_MODE_PERFORMANCE == mode) {
-            sysfs_write("/sys/module/rockchip_pm/parameters/policy", "0");
+            if (support_turn_pm_policy) {
+                ALOGD("Try to turn pm policy\n");
+                sysfs_write("/sys/module/rockchip_pm/parameters/policy", "0");
+            }
             sysfs_write("/dev/video_state", "p");
-        } else if(PERFORMANCE_MODE_PERFORMANCE == mode) {
-            sysfs_write("/sys/module/rockchip_pm/parameters/policy", "1");
+        } else if(PERFORMANCE_MODE_NORMAL == mode) {
+            if (support_turn_pm_policy) {
+                sysfs_write("/sys/module/rockchip_pm/parameters/policy", "1");
+            }
             sysfs_write("/dev/video_state", "n");
         } else {
-            sysfs_write("/sys/module/rockchip_pm/parameters/policy", "1");
+            if (support_turn_pm_policy) {
+                sysfs_write("/sys/module/rockchip_pm/parameters/policy", "1");
+            }
             sysfs_write("/dev/video_state", "n");
         }
         break;
