@@ -91,8 +91,11 @@ static void rk_power_set_interactive(struct power_module *module, int on)
     sysfs_write("/sys/devices/system/cpu/cpu4/online", on ? "1" : "0");
     sysfs_write("/sys/devices/system/cpu/cpu3/online", on ? "1" : "0");
     sysfs_write("/sys/devices/system/cpu/cpu2/online", on ? "1" : "0");
+#ifdef POWER_POLICY_BOX
+    /*box use cpu1 for response remotectrl pwm's irq.*/
+#else
     sysfs_write("/sys/devices/system/cpu/cpu1/online", on ? "1" : "0");
-
+#endif
 }
 
 static void rk_power_hint(struct power_module *module, power_hint_t hint, void *data)
